@@ -1,0 +1,27 @@
+build/
+out/
+bin/
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.a
+*.lib
+CMakeCache.txt
+CMakeFiles/
+# VS Code
+.vscode/
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj*
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# OS generated files
+.DS_Store
+Thumbs.db
