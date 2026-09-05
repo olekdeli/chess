@@ -1,7 +1,10 @@
-#include <../include/game.hpp>
+#include "../include/game.hpp"
 
+gamestate::gamestate(){
 
-void initKnightAttack(){
+}
+
+void gamestate::initKnightAttack(){
 	
 	knightAttackMask.resize(64,0);	
 
@@ -22,7 +25,7 @@ void initKnightAttack(){
 
 }
 
-void initKingAttack(){
+void gamestate::initKingAttack(){
 	kingAttackMask.resize(64,0);
 
 	board kightPos=1;
@@ -31,6 +34,16 @@ void initKingAttack(){
 		kingAttackMask[i] = (kingPos << )
 
 		kingPos<<1
+	}
+
+}
+
+void gamestate::printBoardFormation(board object){
+
+	for(int i=0;i!=64;i++){
+		if(!object%2){std::cerr<<" ";} else
+			std::cerr<<"X";
+		if(i%8)std::cerr<<"\n";
 	}
 
 }
