@@ -1,18 +1,15 @@
 #include "../include/game.hpp"
 
-gamestate::gamestate(){
 
-}
-
-void gamestate::initKnightAttack(){
+void initKnightAttack(){
 	
 	knightAttackMask.resize(64,0);	
 
-	board knightPos=0x0000000000000001
+	board knightPos=0x0000000000000001;
 	
 	for(int pos=0;pos!=64;pos++){
 		
-		knightAttackMask[i] =(knightPos << 17 & ~FILE_A) |
+		knightAttackMask[pos] =(knightPos << 17 & ~FILE_A) |
   			  (knightPos << 15 & ~FILE_H) |
  			  (knightPos << 10 & ~FILE_AB)|
   			  (knightPos << 6 & ~FILE_GH) |
@@ -20,30 +17,45 @@ void gamestate::initKnightAttack(){
   			  (knightPos >> 15 & ~FILE_A) |
 	  		  (knightPos >> 10 & ~FILE_GH)|
  	 		  (knightPos >> 6 & ~FILE_AB);
-		knightPos<<1;
+		knightPos <<= 1;
 	}
 
 }
 
-void gamestate::initKingAttack(){
+void initKingAttack(){
 	kingAttackMask.resize(64,0);
+	board kingPos = 0x0000000000000001;
 
-	board kightPos=1;
-
-	for(int pos=0;pos!=64;p++){
-		kingAttackMask[i] = (kingPos << )
-
-		kingPos<<1
+	for(int pos=0;pos!=64;pos++){
+		kingAttackMask[pos] = 
+			(kingPos << 1 & ~FILE_A) |
+			(kingPos << 7 & ~FILE_H) |
+			(kingPos << 8) | 
+			(kingPos << 9 & ~FILE_A) | 
+			(kingPos >> 1 & ~FILE_H) | 
+			(kingPos >> 7 & ~FILE_A) | 
+			(kingPos >> 8 ) |
+			(kingPos >> 9 & ~FILE_H);
+		kingPos<<=1;
 	}
 
 }
 
-void gamestate::printBoardFormation(board object){
+void init(){
+	initKingAttack();
+	initKnightAttack();
+	//Set the pieces
+	//initPiesesStartPos();
+
+}
+
+void printBoardFormation(board object){
 
 	for(int i=0;i!=64;i++){
-		if(!object%2){std::cerr<<" ";} else
-			std::cerr<<"X";
-		if(i%8)std::cerr<<"\n";
+		if(object & (1ULL << i)) std::cerr<<"x";
+		else std::cerr<<"o";
+		
+		if(i%8==7)std::cerr<<"\n";
 	}
 
 }
