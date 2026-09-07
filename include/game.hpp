@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <vector>
 #include <cstdint>
@@ -8,7 +9,7 @@ constexpr uint64_t FILE_A  = 0x0101010101010101ULL;
 constexpr uint64_t FILE_H  = 0x8080808080808080ULL;
 constexpr uint64_t FILE_AB = 0x0303030303030303ULL;
 constexpr uint64_t FILE_GH = 0xC0C0C0C0C0C0C0C0ULL;
-
+*/
 /*
 Board indexing convention as follows:
 
@@ -23,7 +24,8 @@ Board indexing convention as follows:
 2 | 08 09 10 11 12 13 14 15 
 1 | 00 01 02 03 04 05 06 07
 */
-
+/*
+	//Board Positions
 	inline board whiteKnight; //0b 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
 	inline board whiteRook;
 	inline board whiteBishop;
@@ -37,15 +39,18 @@ Board indexing convention as follows:
 	inline board blackQueen;
 	inline board blackPawns;
 
+	//Occupancy bitboards
 	inline board whites;
 	inline board blacks;
 	inline board allOccupied;
 
-	//Precomputed Attack Masks for faster access 
+	//Precomputed Attack/Move Masks for faster access 
 	inline std::vector<board> knightAttackMask;
 	inline std::vector<board> kingAttackMask;
 	inline std::vector<board> whitePawnAttackMask; 
+	inline std::vector<board> whitePawnMoveMask;
 	inline std::vector<board> blackPawnAttackMask;
+	inline std::vector<board> blackPawnMoveMask;
 
 	//For move history
 	inline std::vector<std::uint16_t> move;
@@ -59,8 +64,9 @@ Board indexing convention as follows:
 	void initKnightAttack();
 	void initKingAttack();
 	void initPawnAttack();
+	void initPawnMove();
 
 	void printBoardFormation(board object);
 
 
-
+*/
