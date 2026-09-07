@@ -41,6 +41,25 @@ void initKingAttack(){
 
 }
 
+void initPawnAttack(){
+	whitePawnAttackMask.resize(64,0);
+	blackPawnAttackMask.resize(64,0);
+
+	board pawnPos = 0x0000000000000001;
+
+	for(int pos=0; pos!=64; pos++){
+		whitePawnAttackMask[pos] = 
+			(pawnPos << 7 & ~FILE_H) |
+			(pawnPos << 9 & ~FILE_A);
+		blackPawnAttackMask[pos] = 
+			(pawnPos >> 7 & ~FILE_A) |
+			(pawnPos >> 9 & ~FILE_H);
+	pawnPos<<=1;
+	}
+
+
+}
+
 void init(){
 	initKingAttack();
 	initKnightAttack();

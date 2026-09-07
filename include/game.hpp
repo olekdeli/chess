@@ -44,6 +44,8 @@ Board indexing convention as follows:
 	//Precomputed Attack Masks for faster access 
 	inline std::vector<board> knightAttackMask;
 	inline std::vector<board> kingAttackMask;
+	inline std::vector<board> whitePawnAttackMask; 
+	inline std::vector<board> blackPawnAttackMask;
 
 	//For move history
 	inline std::vector<std::uint16_t> move;
@@ -54,8 +56,9 @@ Board indexing convention as follows:
 
 	void init();
 	void initPiecesStartPos();
-	void initKnightAttackMask();
-	void initKingAttackMast();
+	void initKnightAttack();
+	void initKingAttack();
+	void initPawnAttack();
 
 	void printBoardFormation(board object);
 
