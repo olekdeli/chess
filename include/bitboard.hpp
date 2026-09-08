@@ -24,5 +24,6 @@ constexpr uint64_t FILE_A  = 0x0101010101010101ULL;
 constexpr uint64_t FILE_H  = 0x8080808080808080ULL;
 constexpr uint64_t FILE_AB = 0x0303030303030303ULL;
 constexpr uint64_t FILE_GH = 0xC0C0C0C0C0C0C0C0ULL;
-
+constexpr uint64_t RANK_1 =  0x00000000000000FFULL;
+constexpr uint64_t RANK_8 =  0xFF00000000000000ULL;
 void printBoardFormation(board object);
