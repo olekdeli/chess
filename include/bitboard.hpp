@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdint>
 
+#define MAGIC_NUMBERS 0
+
 /*
 Board indexing convention as follows:
 

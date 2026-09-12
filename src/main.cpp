@@ -3,6 +3,7 @@
 #include "../include/pawns.hpp"
 #include "../include/sliders.hpp"
 #include "../include/board.hpp"
+#include "../include/GUI.hpp"
 
 
 
@@ -14,11 +15,9 @@ int main(){
 	initPawnAttack();
 	initKnightAttack();
 	initKingAttack();
-	printBoardFormation(knightAttackMask[17]);
-	std::cerr<<"\n";
-	printBoardFormation(knightAttackMask[24]);
-	std::cerr<<"\n";
-	printBoardFormation(kingAttackMask[4]);
-	std::cerr<<"\n";
-	printBoardFormation(kingAttackMask[15]);
+
+	gameState game;
+
+	game.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+	printBoard(game);
 }
