@@ -90,3 +90,63 @@ void gameState::loadFEN(const std::string& fen) {
     }
 }
 
+
+
+void gameState::makeMove(Move move) {
+    int source = move.getSource();
+    int target = move.getTarget();
+    
+    int movingPieceRaw = mailbox[source];
+    Colour us          = static_cast<Colour>(movingPieceRaw & 0b1000);
+    PieceType piece    = static_cast<PieceType>(movingPieceRaw & 0b0111);
+    
+    int capturedPieceRaw = mailbox[target];
+    PieceType captured   = static_cast<PieceType>(capturedPieceRaw & 0b0111);
+    
+    // 2. Save the irreversible state to the history stack
+    this->history[currentPly] = UndoInfo(captured, epSquare, castlingRights, halfMoveClock);
+    
+    // 3. Remove the captured enemy piece from the bitboards (if there is one)
+    if (captured != 0) {
+        Colour them = (us == WHITE) ? BLACK : WHITE;
+        toggle_piece(them, captured, target);
+    }
+    
+    // 4. Move our piece: Toggle it OFF the source, and ON the target
+    toggle_piece(us, piece, source);
+    toggle_piece(us, piece, target);
+    
+    // 5. Update state variables (Half-move clock, En Passant, Castling)
+    // You will need to write the logic here later to update castling rights if a King or Rook moves,
+    // and reset the halfMoveClock if a pawn moves or a capture happens.
+    
+    // 6. Go one layer deeper in the tree
+    currentPly++;
+}
+
+
+void gameState::unmakeMove(Move move){
+
+    currentPly--;
+
+    UndoInfo undo = history[currentPly];
+
+    int source = move.getSource();
+    int target = move.getTarget();
+    
+    int movingPieceRaw = mailbox[target];
+    Colour us          = static_cast<Colour>(movingPieceRaw & 0b1000);
+    Colour enemyColour = (us == WHITE)? BLACK : WHITE; 
+    PieceType piece    = static_cast<PieceType>(movingPieceRaw & 0b0111);
+    
+    toggle_piece(us, piece, source);
+    toggle_piece(us, piece, target);
+
+    PieceType captured = undo.getCapturedPiece();
+    
+    if(captured!=0) toggle_piece(enemyColour, history[currentPly].getCapturedPiece(),target);
+
+    epSquare       = undo.getEpSquare();
+    castlingRights = undo.getCastlingRights();
+    halfMoveClock  = undo.getHalfMoveClock();
+}

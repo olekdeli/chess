@@ -24,6 +24,10 @@ int main(){
 	extern void test_moveGen_rook();
 	extern void test_moveGen_king();
 
+	extern void test_moveGen_isSquareAttacked();
+
+	extern void test_makeMove_and_unmake();
+
 	try{
 		test_leapers_knightAttackMask();
 		test_leapers_kingAttackMask();
@@ -50,6 +54,12 @@ int main(){
 		test_moveGen_queen();
 		test_moveGen_king();
 		std::cout<<"=====MoveGen tests passed========\n";
+
+		test_moveGen_isSquareAttacked();
+		std::cout<<"=====attackDetection tests passed========\n";
+
+		void test_makeMove_and_unmake();
+		std::cout<<"=====move history tests passed========\n";
 
 
 	}

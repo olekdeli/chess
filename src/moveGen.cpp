@@ -3,13 +3,25 @@
 #include "../include/sliders.hpp"
 #include "../include/pawns.hpp"
 
+void initAllMasks(){
+	void initKnightAttack();
+	void initKingAttack();
+
+	void initCrossMask();
+	void initPlusMask();
+	void initQueenMask();
+
+	void initPawnMove();
+	void initPawnAttack();
+}
+
 void generateMoves(const gameState& game, std::vector<Move>& moveList) {
     if (game.sideToMove == WHITE) {
         generatePawnMoves(game, moveList, WHITE);
         generateKnightMoves(game, moveList, WHITE);
 	generateBishopMoves(game,moveList,WHITE);
 	generateRookMoves(game,moveList,WHITE);
-	generateQueenMoves(game,moveList,White);
+	generateQueenMoves(game,moveList,WHITE);
 	generateKingMoves(game,moveList,WHITE);
     } else {
         generatePawnMoves(game, moveList, BLACK);
@@ -272,4 +284,77 @@ void generateKingMoves(const gameState& game, std::vector<Move>& moveList, Colou
 }
 #endif
 
-bool isSquareAttacked(const gameState& game, int index);
+bool isSquareAttacked(const gameState& game, int index, Colour enemy){
+	int closest; int piece;
+	//Leapers
+	board enemyPawn = (enemy==WHITE)? game.whitePawns : game.blackPawns;
+	board enemyKing = (enemy==WHITE)? game.whiteKing : game.blackKing;
+	board enemyKnight = (enemy==WHITE)? game.whiteKnight : game.blackKnight;
+	//Sliders
+	board enemyBishop = (enemy==WHITE)? game.whiteBishop : game.blackBishop;
+	board enemyRook = (enemy==WHITE)? game.whiteRook : game.blackRook;
+	board enemyQueen = (enemy==WHITE)? game.whiteQueen : game.blackQueen;
+	//
+	board pawnAttackMask = (enemy==WHITE)? blackPawnAttackMask[index] : whitePawnAttackMask[index];
+	if((enemyPawn & pawnAttackMask) != 0) return true;
+
+	
+	//CHECK FOR ENPASSANT - if in a enPassant'ed square
+	if(index == game.epSquare && game.epSquare!=0){
+		if(pawnAttackMask & (1ULL<<index) != 0)
+			return true;
+	}
+
+
+	if((enemyKing & kingAttackMask[index]) != 0) return true;
+	if((enemyKnight & knightAttackMask[index]) != 0) return true;
+	//NW
+	board blockers = game.allOccupied & NWMask[index];
+	if(blockers!=0){
+		int closest = __builtin_ctzll(blockers);
+		int piece = game.mailbox[closest];
+		if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;
+	}
+
+	//NE
+	blockers = game.allOccupied & NEMask[index];
+	if(blockers!=0){
+		closest = __builtin_ctzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;
+	}
+
+	//SW
+	blockers = game.allOccupied & SWMask[index];
+	if(blockers!=0){
+		closest = __builtin_clzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;	
+	}
+	//SE
+	blockers = game.allOccupied & SEMask[index];
+	closest = __builtin_clzll(blockers);
+	piece = game.mailbox[closest];
+	if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;
+	//W
+	blockers = game.allOccupied & WMask[index];
+	closest = __builtin_clzll(blockers);
+	piece = game.mailbox[closest];
+	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;
+	//S
+	blockers = game.allOccupied & SMask[index];
+	closest = __builtin_clzll(blockers);
+	piece = game.mailbox[closest];
+	//N
+	blockers = game.allOccupied & NMask[index];
+	closest = __builtin_ctzll(blockers);
+	piece = game.mailbox[closest];
+	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;	
+	//E
+	blockers = game.allOccupied & EMask[index];
+	closest = __builtin_ctzll(blockers);
+	piece = game.mailbox[closest];
+	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;	
+	//if not
+	return false;
+}

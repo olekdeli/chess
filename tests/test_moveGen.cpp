@@ -250,3 +250,59 @@ void test_moveGen_king() {
     assert(moveList.size() == 3 && "Corner King on H1 must have exactly 3 moves");
     std::cout << "King tests passed.\n";
 }
+
+void test_moveGen_isSquareAttacked(){
+	gameState game;
+	initAllMasks();
+    // ==========================================
+    // 1. EMPTY BOARD (Safe Square)
+    // ==========================================
+    // E4 is index 28. It should not be attacked by Black.
+    assert(isSquareAttacked(game, 28, BLACK) == false && "E4 must be safe on an empty board");
+	
+    // ==========================================
+    // 2. PAWN ASYMMETRY
+    // ==========================================
+    // Place a Black Pawn on D5 (index 35). It attacks South-East to E4 (28).
+    game.toggle_piece(BLACK, PAWN, 35);
+    assert(isSquareAttacked(game, 28, BLACK) == true && "E4 must be attacked by Black Pawn on D5");
+    game.toggle_piece(BLACK, PAWN, 35); // Remove it
+
+    // Place a White Pawn on D5 (index 35). It attacks North-East. 
+    // It should NOT attack E4 (28).
+    game.toggle_piece(WHITE, PAWN, 35);
+    assert(isSquareAttacked(game, 28, BLACK) == false && "E4 must NOT be attacked by a White Pawn on D5");
+    game.toggle_piece(WHITE, PAWN, 35); // Remove it
+
+    // ==========================================
+    // 3. LEAPER ATTACK (Knight)
+    // ==========================================
+    // Place Black Knight on F6 (index 45).
+    game.toggle_piece(BLACK, KNIGHT, 45);
+    assert(isSquareAttacked(game, 28, BLACK) == true && "E4 must be attacked by Black Knight on F6");
+    game.toggle_piece(BLACK, KNIGHT, 45); // Remove it
+
+    // ==========================================
+    // 4. UNBLOCKED SLIDER (Rook)
+    // ==========================================
+    // Place Black Rook on E8 (index 60). It looks directly down the E-file.
+    game.toggle_piece(BLACK, ROOK, 60);
+    assert(isSquareAttacked(game, 28, BLACK) == true && "E4 must be attacked by unblocked Black Rook on E8");
+
+    // ==========================================
+    // 5. BLOCKED SLIDER
+    // ==========================================
+    // Place a White Pawn on E6 (index 44) to block the Black Rook's ray.
+    game.toggle_piece(WHITE, PAWN, 44);
+    
+    // The mailbox lookup should see the White Pawn first and return false.
+    assert(isSquareAttacked(game, 28, BLACK) == false && "E4 must be safe when the Black Rook is blocked");
+
+    // Change the blocking piece to a Black Pawn. The square should STILL be safe.
+    // (A piece cannot attack THROUGH its own friendly pieces).
+    game.toggle_piece(WHITE, PAWN, 44); // Remove White Pawn
+    game.toggle_piece(BLACK, PAWN, 44); // Add Black Pawn
+    assert(isSquareAttacked(game, 28, BLACK) == false && "E4 must be safe when the Black Rook is blocked by its own Pawn");
+    std::cout << "isSquareAttacked tests passed successfully.\n";
+    
+}
