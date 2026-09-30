@@ -10,6 +10,7 @@ void generateRookMoves(const gameState& game, std::vector<Move>& moveList, Colou
 void generateQueenMoves(const gameState& game, std::vector<Move>& moveList, Colour colour);
 void generateKingMoves(const gameState& game, std::vector<Move>& moveList, Colour colour);
 
+
 bool isSquareAttacked(const gameState& game, int index, Colour enemy);
 
 void initAllMasks();

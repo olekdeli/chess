@@ -46,7 +46,7 @@ void generateKnightMoves(const gameState& game, std::vector<Move>& moveList, Col
 		//Add all the singular attacks to a list
 		while(attacks!=0){
 			int targetSquare = __builtin_ctzll(attacks);
-			moveList.push_back(Move(pieceSquare, targetSquare, KNIGHT));
+			moveList.push_back(Move(pieceSquare, targetSquare));
 
 			//Brian Kernighan's Algorithm!!!
 			attacks &= (attacks - 1);
@@ -61,30 +61,98 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
 	uint64_t friendlyPieces = (colour==WHITE)? game.whites : game.blacks;
 	uint64_t enemyPieces = (colour==WHITE)? game.blacks : game.whites;
 
-	uint64_t attacks;	
+	uint64_t attacks;
 
-	while(pieces!=0){
-		int pieceSquare = __builtin_ctzll(pieces);
-		
-		if(colour==WHITE){
+	if(colour==WHITE){
+		board singlePush = (game.whitePawns<<8) & ~game.allOccupied;
+		board doublePush =  (singlePush<<8) & ~game.allOccupied & RANK_4;
+			//SINGLE
+		while (singlePush != 0) {
+	       		int target = __builtin_ctzll(singlePush);
+     			moveList.push_back(Move(target - 8, target, QUIET_MOVE_FLAG)); // Quiet move
+      			singlePush &= (singlePush - 1);
+        	}
 
-			attacks = whitePawnAttackMask[pieceSquare] & enemyPieces |
-				   whitePawnMoveMask[pieceSquare] & ~game.allOccupied;
+			//DOUBLE
+		while (doublePush != 0) {
+			int target = __builtin_ctzll(doublePush);
+			moveList.push_back(Move(target - 16, target, DOUBLE_PUSH_FLAG)); // Double Push
+			doublePush &= (doublePush - 1);
+        	}
+			//LEFT CAPTURES
+		board captures = (~FILE_H & (game.whitePawns<<7) & game.blackPawns); 
+		while (captures != 0) {
+			int target = __builtin_ctzll(captures);
+			moveList.push_back(Move(target - 7, target, NORMAL_CAPTURE_FLAG)); 	// Capture
+			captures &= (captures - 1);
+        	}
+			//RIGHT CAPTURES
+		captures = (~FILE_A & (game.whitePawns<<9) & game.blackPawns);
+		while (captures != 0) {
+			int target = __builtin_ctzll(captures);
+			moveList.push_back(Move(target - 9, target, NORMAL_CAPTURE_FLAG)); 	// Capture
+			captures &= (captures - 1);
 		}
-		else{
-			attacks = blackPawnAttackMask[pieceSquare] & enemyPieces |
-				   blackPawnMoveMask[pieceSquare] & ~game.allOccupied;
+		//En Pass
+		if(game.epSquare!=0){
+			
+			board epAttackers = blackPawnAttackMask[game.epSquare] & game.whitePawns;
+			while (epAttackers != 0) {
+        			int source = __builtin_ctzll(epAttackers);
+        			moveList.push_back(Move(source, game.epSquare, EN_PASS_FLAG));
+        			epAttackers &= (epAttackers - 1);
+    			}
 		}
-		//Add all the singular attacks to a list
-		while(attacks!=0){
-			int targetSquare = __builtin_ctzll(attacks);
-			moveList.push_back(Move(pieceSquare, targetSquare, PAWN));
-			//Brian Kernighan's Algorithm!!!
-			attacks &= (attacks - 1);
+
+	}
+		else
+	{	//FOR BLACKS
+
+		board singlePush = (game.blackPawns>>8) & ~game.allOccupied;
+		board doublePush =  (singlePush>>8) & ~game.allOccupied & RANK_5;
+			//SINGLE
+		while (singlePush != 0) {
+			int target = __builtin_ctzll(singlePush);
+			moveList.push_back(Move(target + 8, target, QUIET_MOVE_FLAG)); // Quiet move
+			singlePush &= (singlePush - 1);
 		}
-	pieces &= (pieces - 1);
+
+			//DOUBLE
+		while (doublePush != 0) {
+			int target = __builtin_ctzll(doublePush);
+			moveList.push_back(Move(target + 16, target, DOUBLE_PUSH_FLAG)); // Double Push
+			doublePush &= (doublePush - 1);
+		}
+			//LEFT CAPTURES
+		board captures = (~FILE_H & (game.whitePawns>>7) & game.blackPawns); 
+		while (captures != 0) {
+			int target = __builtin_ctzll(captures);
+			moveList.push_back(Move(target + 7, target, NORMAL_CAPTURE_FLAG)); 	// Capture
+			captures &= (captures - 1);
+		}
+			//RIGHT CAPTURES
+		captures = (~FILE_A & (game.whitePawns>>9) & game.blackPawns);
+		while (captures != 0) {
+			int target = __builtin_ctzll(captures);
+			moveList.push_back(Move(target + 9, target, NORMAL_CAPTURE_FLAG)); 	// Capture
+			captures &= (captures - 1);
+		}
+		if(game.epSquare!=0){	
+			board epAttackers = whitePawnAttackMask[game.epSquare] & game.blackPawns;
+			while (epAttackers != 0) {
+				int source = __builtin_ctzll(epAttackers);
+				moveList.push_back(Move(source, game.epSquare, EN_PASS_FLAG));
+				epAttackers &= (epAttackers - 1);
+			}
+		}
+
+
+
 	}
 }
+
+
+
 
 #if MAGIC_NUMBERS==0
 void generateBishopMoves(const gameState& game, std::vector<Move>& moveList, Colour colour) {
@@ -299,10 +367,14 @@ bool isSquareAttacked(const gameState& game, int index, Colour enemy){
 	if((enemyPawn & pawnAttackMask) != 0) return true;
 
 	
-	//CHECK FOR ENPASSANT - if in a enPassant'ed square
-	if(index == game.epSquare && game.epSquare!=0){
-		if(pawnAttackMask & (1ULL<<index) != 0)
+	//CHECK FOR ENPASSANT - if we are checking a pawn that just did a double push 
+	//(so it is one file above the en passant ghost pawn)
+	if(enemy == BLACK){//Therefore we are white
+		//			    AND there was enPassnt
+		if(index == game.epSquare+8 && (game.epSquare!=0)){
+			if((pawnAttackMask & (1ULL<<index) )!= 0)
 			return true;
+		}
 	}
 
 
@@ -333,28 +405,38 @@ bool isSquareAttacked(const gameState& game, int index, Colour enemy){
 	}
 	//SE
 	blockers = game.allOccupied & SEMask[index];
-	closest = __builtin_clzll(blockers);
-	piece = game.mailbox[closest];
-	if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;
+	if(blockers!=0){
+		closest = __builtin_clzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|BISHOP) || piece == (enemy|QUEEN)) return true;
+	}
 	//W
 	blockers = game.allOccupied & WMask[index];
-	closest = __builtin_clzll(blockers);
-	piece = game.mailbox[closest];
-	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;
+	if(blockers!=0){
+		closest = __builtin_clzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;
+	}
 	//S
 	blockers = game.allOccupied & SMask[index];
-	closest = __builtin_clzll(blockers);
-	piece = game.mailbox[closest];
+	if(blockers!=0){
+		closest = __builtin_clzll(blockers);
+		piece = game.mailbox[closest];
+	}
 	//N
 	blockers = game.allOccupied & NMask[index];
-	closest = __builtin_ctzll(blockers);
-	piece = game.mailbox[closest];
-	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;	
+	if(blockers!=0){
+		closest = __builtin_ctzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;	
+	}
 	//E
 	blockers = game.allOccupied & EMask[index];
-	closest = __builtin_ctzll(blockers);
-	piece = game.mailbox[closest];
-	if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;	
+	if(blockers!=0){
+		closest = __builtin_ctzll(blockers);
+		piece = game.mailbox[closest];
+		if(piece == (enemy|ROOK) || piece == (enemy|QUEEN)) return true;		
+	}
 	//if not
 	return false;
 }
