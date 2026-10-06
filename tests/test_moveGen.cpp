@@ -1,69 +1,105 @@
 #include "../include/board.hpp"   //gameState and Colour
 #include "../include/moveGen.hpp" //Move and generatePawnMoves
 
+//#include <../include/GUI.hpp> //For debuging with "checkState(game,moveList);"
+
 extern void initPawnAttack();
 
-void test_moveGen_pawnMove(){
-	
-	gameState game;
-	std::vector<Move> moveList;
-	
-
-	//initPawnAttack();
-	//initPawnMove();
-
-	game.whitePawns = (1ULL << 13); //F2
-	game.allOccupied = game.whitePawns;
-
-	generatePawnMoves(game,moveList,WHITE);
-	//Without any enemies a pawn should only generate 1 move
-	
-	assert(moveList.size() == 1 && "F2 Pawn should have exactly 1 move");
-	assert(moveList[0].getTarget() == 21 && "Target square must be F3 (index 21)");
-
-	game.whitePawns = (1ULL << 15); //F2
-	game.allOccupied = game.whitePawns;
-
-	generatePawnMoves(game,moveList,WHITE);
-
-	assert(moveList.size()==2 && "F2+H2 pawns doesn't have 2 moves");
-	assert(moveList[0].getTarget() == 21 && "Second move added should not change the previous moves");
-	assert(moveList[1].getTarget() == 23 && "Target square should be F5 (index 23)");
+bool containsMove(const std::vector<Move>& moveList, int source, int target, int flag) {
+    for (const Move& m : moveList) {
+        if (m.getSource() == source && m.getTarget() == target && m.getFlag() == flag) {
+            return true;
+        }
+    }
+    return false;
 }
 
+void test_moveGen_pawnMove(){
+    gameState game; 
+    std::vector<Move> moveList;
+
+    // A2 (Index 8) - Completely free
+    game.toggle_piece(WHITE, PAWN, 8); 
+    
+    // B2 (Index 9) - Blocked from double pushing by a piece on B4 (Index 25)
+    game.toggle_piece(WHITE, PAWN, 9);
+    game.toggle_piece(BLACK, ROOK, 25); 
+
+    // C2 (Index 10) - Completely blocked by a piece on C3 (Index 18)
+    game.toggle_piece(WHITE, PAWN, 10);
+    game.toggle_piece(BLACK, KNIGHT, 18);
+
+    generatePawnMoves(game, moveList, WHITE);
+
+
+    // A2 should generate a single and double push
+    assert(containsMove(moveList, 8, 16, QUIET_MOVE_FLAG)); 
+    assert(containsMove(moveList, 8, 24, DOUBLE_PUSH_FLAG)); 
+
+    // B2 should ONLY generate a single push
+    assert(containsMove(moveList, 9, 17, QUIET_MOVE_FLAG));
+    assert(!containsMove(moveList, 9, 25, DOUBLE_PUSH_FLAG));
+
+    // C2 should generate absolutely nothing
+    assert(!containsMove(moveList, 10, 18, QUIET_MOVE_FLAG));
+    assert(!containsMove(moveList, 10, 26, DOUBLE_PUSH_FLAG));
+}
+
+
+
+
 void test_moveGen_pawnAttack(){
-	
+
 	gameState game;
 	std::vector<Move> moveList;
 
-	//Checking for attack when unblocked (1move+1attack target)
-	game.toggle_piece(WHITE, PAWN, 13);
-	game.toggle_piece(BLACK, PAWN, 20);	
-	generatePawnMoves(game,moveList,WHITE);
-	assert(moveList.size()==2 && "while not blocked, F2 has only 2 moves to E3 and F3");
-	assert(moveList[0].getTarget()==20 && "F2 moves to E3");
+	game.toggle_piece(WHITE, PAWN, 31);
+	game.toggle_piece(BLACK, KNIGHT, 38); 
+	// Place a phantom piece on the A-file (Index 40) to ensure wrap-around capture is blocked by ~FILE_A
+	game.toggle_piece(BLACK, ROOK, 40); 
 
-	moveList.clear();
-	//Checking for moveList clearing
-	game.toggle_piece(BLACK, PAWN, 20);	
-	generatePawnMoves(game,moveList,WHITE);
-	assert(moveList.size()==1 && "List does not clear");
+	// D5 (Index 35) - Positioned for an En Passant capture to C6 (Index 42)
+	game.toggle_piece(WHITE, PAWN, 35);
+	game.toggle_piece(BLACK, PAWN, 34); // The Black pawn just double pushed to C5
+	game.epSquare = 42; // The En Passant target square on C6
 
-	//Checking for attack recognision when 2 targets + 1move
-	moveList.clear();
-	game.toggle_piece(BLACK, PAWN, 20); //_XMX_
-	game.toggle_piece(BLACK, PAWN, 22); //__P__ 
-	generatePawnMoves(game,moveList,WHITE);
-	assert(moveList.size()==3 && "Not enough pawn moves found");
-	assert(moveList[0].getTarget()==20 && "Wrong target found");
-	assert(moveList[1].getTarget()==21 && "Wrong target found");
-	assert(moveList[2].getTarget()==22 && "Wrong target found");
-	
-	//Checking for attack recognision when 2 targets + no_move
-	moveList.clear();
-	game.toggle_piece(BLACK, PAWN, 21);
-	generatePawnMoves(game,moveList,WHITE);
-	assert(moveList.size()==2 && "Error at finding moves when blocked");
+	generatePawnMoves(game, moveList, WHITE);
+
+	// H4 should capture G5, but NOT capture A5 (Index 40)
+
+
+	assert(containsMove(moveList, 31, 38, NORMAL_CAPTURE_FLAG));
+	assert(!containsMove(moveList, 31, 40, NORMAL_CAPTURE_FLAG));
+
+	// D5 should generate an En Passant capture to C6
+	assert(containsMove(moveList, 35, 42, EN_PASS_FLAG));
+
+}
+
+void test_moveGen_pawnPromotion(){
+	gameState game;
+
+	game.toggle_piece(WHITE, PAWN, 48);
+	game.toggle_piece(BLACK, ROOK, 57); // Target for right capture promotion
+
+	std::vector<Move> moveList;
+	generatePawnMoves(game, moveList, WHITE);
+
+	// A7 Single Push Promotions (Index 56)
+	assert(containsMove(moveList, 48, 56, KNIGHT_PROMOTION_FLAG));
+	assert(containsMove(moveList, 48, 56, BISHOP_PROMOTION_FLAG));
+	assert(containsMove(moveList, 48, 56, ROOK_PROMOTION_FLAG));
+	assert(containsMove(moveList, 48, 56, QUEEN_PROMOTION_FLAG));
+
+	// A7 Right Capture Promotions (Index 57)
+	assert(containsMove(moveList, 48, 57, KNIGHT_PROMOTION_CAPTURE_FLAG));
+	assert(containsMove(moveList, 48, 57, BISHOP_PROMOTION_CAPTURE_FLAG));
+	assert(containsMove(moveList, 48, 57, ROOK_PROMOTION_CAPTURE_FLAG));
+	assert(containsMove(moveList, 48, 57, QUEEN_PROMOTION_CAPTURE_FLAG));
+
+	// Ensure it did NOT accidentally push a standard quiet move or normal capture to Rank 8
+	assert(!containsMove(moveList, 48, 56, QUIET_MOVE_FLAG));
+	assert(!containsMove(moveList, 48, 57, NORMAL_CAPTURE_FLAG));
 }
 
 void test_moveGen_knight() {

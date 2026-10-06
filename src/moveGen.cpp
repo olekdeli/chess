@@ -65,6 +65,10 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
 
 	if(colour==WHITE){
 		board singlePush = (game.whitePawns<<8) & ~game.allOccupied;
+
+		board promotions = singlePush & RANK_8;
+		singlePush &= ~RANK_8;
+
 		board doublePush =  (singlePush<<8) & ~game.allOccupied & RANK_4;
 			//SINGLE
 		while (singlePush != 0) {
@@ -73,21 +77,60 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
       			singlePush &= (singlePush - 1);
         	}
 
+		while (promotions!=0){
+	       		int target = __builtin_ctzll(promotions);
+     			moveList.push_back(Move(target - 8, target, KNIGHT_PROMOTION_FLAG));
+     			moveList.push_back(Move(target - 8, target, BISHOP_PROMOTION_FLAG));
+     			moveList.push_back(Move(target - 8, target, ROOK_PROMOTION_FLAG));
+     			moveList.push_back(Move(target - 8, target, QUEEN_PROMOTION_FLAG));
+			promotions &= (promotions - 1);
+		}
+
 			//DOUBLE
 		while (doublePush != 0) {
 			int target = __builtin_ctzll(doublePush);
 			moveList.push_back(Move(target - 16, target, DOUBLE_PUSH_FLAG)); // Double Push
 			doublePush &= (doublePush - 1);
         	}
+
+
 			//LEFT CAPTURES
-		board captures = (~FILE_H & (game.whitePawns<<7) & game.blackPawns); 
+		board captures = (~FILE_H & (game.whitePawns<<7) & game.blacks);
+
+		board promotionCaptures = captures & RANK_8;
+		captures &= ~promotionCaptures;
+
+		while(promotionCaptures!=0){
+	       		int target = __builtin_ctzll(promotionCaptures);
+     			moveList.push_back(Move(target - 7, target, KNIGHT_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 7, target, BISHOP_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 7, target, ROOK_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 7, target, QUEEN_PROMOTION_CAPTURE_FLAG));
+			promotionCaptures &= (promotionCaptures - 1);
+		}
+
+
 		while (captures != 0) {
 			int target = __builtin_ctzll(captures);
 			moveList.push_back(Move(target - 7, target, NORMAL_CAPTURE_FLAG)); 	// Capture
 			captures &= (captures - 1);
         	}
 			//RIGHT CAPTURES
-		captures = (~FILE_A & (game.whitePawns<<9) & game.blackPawns);
+		captures = (~FILE_A & (game.whitePawns<<9) & game.blacks);
+
+		promotionCaptures = captures & RANK_8;
+		captures &= ~promotionCaptures;
+
+		while(promotionCaptures!=0){
+	       		int target = __builtin_ctzll(promotionCaptures);
+     			moveList.push_back(Move(target - 9, target, KNIGHT_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 9, target, BISHOP_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 9, target, ROOK_PROMOTION_CAPTURE_FLAG));
+     			moveList.push_back(Move(target - 9, target, QUEEN_PROMOTION_CAPTURE_FLAG));
+			promotionCaptures &= (promotionCaptures - 1);
+		}
+
+
 		while (captures != 0) {
 			int target = __builtin_ctzll(captures);
 			moveList.push_back(Move(target - 9, target, NORMAL_CAPTURE_FLAG)); 	// Capture
@@ -105,10 +148,13 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
 		}
 
 	}
-		else
-	{	//FOR BLACKS
-
+	else //FOR BLACKS
+	{
 		board singlePush = (game.blackPawns>>8) & ~game.allOccupied;
+
+		board promotions = singlePush & RANK_1;
+		singlePush &= ~RANK_1;
+
 		board doublePush =  (singlePush>>8) & ~game.allOccupied & RANK_5;
 			//SINGLE
 		while (singlePush != 0) {
@@ -117,27 +163,68 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
 			singlePush &= (singlePush - 1);
 		}
 
+		while (promotions!=0){
+			int target = __builtin_ctzll(promotions);
+			moveList.push_back(Move(target + 8, target, KNIGHT_PROMOTION_FLAG));
+			moveList.push_back(Move(target + 8, target, BISHOP_PROMOTION_FLAG));
+			moveList.push_back(Move(target + 8, target, ROOK_PROMOTION_FLAG));
+			moveList.push_back(Move(target + 8, target, QUEEN_PROMOTION_FLAG));
+			promotions &= (promotions - 1);
+		}
+
 			//DOUBLE
 		while (doublePush != 0) {
 			int target = __builtin_ctzll(doublePush);
 			moveList.push_back(Move(target + 16, target, DOUBLE_PUSH_FLAG)); // Double Push
 			doublePush &= (doublePush - 1);
 		}
+
+
 			//LEFT CAPTURES
-		board captures = (~FILE_H & (game.whitePawns>>7) & game.blackPawns); 
+		board captures = (~FILE_H & (game.blackPawns>>7) & game.whites);
+
+		board promotionCaptures = captures & RANK_1;
+		captures &= ~promotionCaptures;
+
+		while(promotionCaptures!=0){
+			int target = __builtin_ctzll(promotionCaptures);
+			moveList.push_back(Move(target + 9, target, KNIGHT_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, BISHOP_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, ROOK_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, QUEEN_PROMOTION_CAPTURE_FLAG));
+			promotionCaptures &= (promotionCaptures - 1);
+		}
+
+
 		while (captures != 0) {
 			int target = __builtin_ctzll(captures);
 			moveList.push_back(Move(target + 7, target, NORMAL_CAPTURE_FLAG)); 	// Capture
 			captures &= (captures - 1);
 		}
 			//RIGHT CAPTURES
-		captures = (~FILE_A & (game.whitePawns>>9) & game.blackPawns);
+		captures = (~FILE_A & (game.blackPawns>>9) & game.whites);
+
+		promotionCaptures = captures & RANK_1;
+		captures &= ~promotionCaptures;
+
+		while(promotionCaptures!=0){
+			int target = __builtin_ctzll(promotionCaptures);
+			moveList.push_back(Move(target + 9, target, KNIGHT_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, BISHOP_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, ROOK_PROMOTION_CAPTURE_FLAG));
+			moveList.push_back(Move(target + 9, target, QUEEN_PROMOTION_CAPTURE_FLAG));
+			promotionCaptures &= (promotionCaptures - 1);
+		}
+
+
 		while (captures != 0) {
 			int target = __builtin_ctzll(captures);
 			moveList.push_back(Move(target + 9, target, NORMAL_CAPTURE_FLAG)); 	// Capture
 			captures &= (captures - 1);
 		}
-		if(game.epSquare!=0){	
+		//En Pass
+		if(game.epSquare!=0){
+			
 			board epAttackers = whitePawnAttackMask[game.epSquare] & game.blackPawns;
 			while (epAttackers != 0) {
 				int source = __builtin_ctzll(epAttackers);
@@ -146,9 +233,9 @@ void generatePawnMoves(const gameState& game, std::vector<Move>& moveList, Colou
 			}
 		}
 
-
-
 	}
+	
+	
 }
 
 
@@ -365,19 +452,7 @@ bool isSquareAttacked(const gameState& game, int index, Colour enemy){
 	//
 	board pawnAttackMask = (enemy==WHITE)? blackPawnAttackMask[index] : whitePawnAttackMask[index];
 	if((enemyPawn & pawnAttackMask) != 0) return true;
-
 	
-	//CHECK FOR ENPASSANT - if we are checking a pawn that just did a double push 
-	//(so it is one file above the en passant ghost pawn)
-	if(enemy == BLACK){//Therefore we are white
-		//			    AND there was enPassnt
-		if(index == game.epSquare+8 && (game.epSquare!=0)){
-			if((pawnAttackMask & (1ULL<<index) )!= 0)
-			return true;
-		}
-	}
-
-
 	if((enemyKing & kingAttackMask[index]) != 0) return true;
 	if((enemyKnight & knightAttackMask[index]) != 0) return true;
 	//NW

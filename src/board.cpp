@@ -98,29 +98,97 @@ void gameState::makeMove(Move move) {
     
     int movingPieceRaw = mailbox[source];
     Colour us          = static_cast<Colour>(movingPieceRaw & 0b1000);
+    Colour them	       = static_cast<Colour>(static_cast<uint>(us) ^ 0b1000);
     PieceType piece    = static_cast<PieceType>(movingPieceRaw & 0b0111);
     
     int capturedPieceRaw = mailbox[target];
     PieceType captured   = static_cast<PieceType>(capturedPieceRaw & 0b0111);
     
-    // 2. Save the irreversible state to the history stack
-    this->history[currentPly] = UndoInfo(captured, epSquare, castlingRights, halfMoveClock);
-    
-    // 3. Remove the captured enemy piece from the bitboards (if there is one)
-    if (captured != 0) {
-        Colour them = (us == WHITE) ? BLACK : WHITE;
-        toggle_piece(them, captured, target);
-    }
-    
-    // 4. Move our piece: Toggle it OFF the source, and ON the target
-    toggle_piece(us, piece, source);
-    toggle_piece(us, piece, target);
-    
-    // 5. Update state variables (Half-move clock, En Passant, Castling)
-    // You will need to write the logic here later to update castling rights if a King or Rook moves,
-    // and reset the halfMoveClock if a pawn moves or a capture happens.
-    
-    // 6. Go one layer deeper in the tree
+    this->history[currentPly] = UndoInfo(captured, this->epSquare, this->castlingRights, this->halfMoveClock);
+
+    epSquare = 0;
+    //Move the piece, delete from the source
+   // toggle_piece(us, piece, source);
+    //toggle_piece(us, piece, target);
+
+    switch(move.getFlag()){
+	case QUIET_MOVE_FLAG:
+		toggle_piece(us, piece, source);
+    		toggle_piece(us, piece, target);
+		break;
+	case DOUBLE_PUSH_FLAG:
+		epSquare = (us == WHITE) ? target - 8 : target + 8;
+	 	toggle_piece(us, piece, source);
+   		toggle_piece(us, piece, target);
+		break;
+
+	case KING_SIDE_CASTLE_FLAG:
+
+	case QUEEN_SIDE_CASTLE_FLAG:
+
+
+	case NORMAL_CAPTURE_FLAG:
+		toggle_piece(us, piece, source);
+		toggle_piece( them, captured, target);
+		toggle_piece(us, piece, target);
+		break;
+
+	case EN_PASS_FLAG:
+		captured = static_cast<PieceType>(PAWN & 0b0111);
+		toggle_piece(us, piece, source);
+		if(us==WHITE) toggle_piece(them, piece, target-8);
+		else toggle_piece(them, piece, target+8);
+
+    		toggle_piece(us, piece, target);
+		break;
+
+	case KNIGHT_PROMOTION_FLAG:
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, KNIGHT, target);
+		break;
+
+	case BISHOP_PROMOTION_FLAG:
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, BISHOP, target);
+		break;
+
+	case ROOK_PROMOTION_FLAG:
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, ROOK, target);
+		break;
+
+	case QUEEN_PROMOTION_FLAG:
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, QUEEN, target);
+		break;
+
+	case KNIGHT_PROMOTION_CAPTURE_FLAG:
+		toggle_piece(them, captured, target);
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, KNIGHT, target);
+		break;
+
+	case BISHOP_PROMOTION_CAPTURE_FLAG:
+		toggle_piece(them, captured, target);
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, BISHOP, target);
+		break;
+
+	case ROOK_PROMOTION_CAPTURE_FLAG:
+		toggle_piece(them, captured, target);
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, ROOK, target);
+		break;
+
+	case QUEEN_PROMOTION_CAPTURE_FLAG:
+		toggle_piece(them, captured, target);
+		toggle_piece(us, PAWN, source);
+		toggle_piece(us, QUEEN, target);
+		break;
+	}
+	
+
+   
     currentPly++;
 }
 

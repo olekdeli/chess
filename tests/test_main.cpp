@@ -18,6 +18,7 @@ int main(){
 
 	extern void test_moveGen_pawnAttack();
 	extern void test_moveGen_pawnMove();
+	extern void test_moveGen_pawnPromotion();
 	extern void test_moveGen_knight();
 	extern void test_moveGen_bishop();
 	extern void test_moveGen_queen();
@@ -47,6 +48,7 @@ int main(){
 
 		test_moveGen_pawnAttack();
 		test_moveGen_pawnMove();
+		test_moveGen_pawnPromotion();
 		test_moveGen_knight();
 		test_moveGen_bishop();
 
