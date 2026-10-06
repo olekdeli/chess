@@ -13,7 +13,7 @@ for(int rank=7;rank>=0 ;rank--){
 
 
 	int i = file + rank*8;
-	if(i<=9) std::cerr<<" ";
+	
 
 	switch(game.mailbox[i]){
 		case 0b0001: std::cerr<< " ♟  " ;break;
@@ -28,7 +28,7 @@ for(int rank=7;rank>=0 ;rank--){
 		case 0b1101: std::cerr<< " ♕  " ;break;
 		case 0b0110: std::cerr<< " ♚  " ;break;
 		case 0b1110: std::cerr<< " ♔  " ;break;
-		case 0b0000: std::cerr<< " "<<i<<" "; break;
+		case 0b0000: std::cerr<< " "<<i<<" ";if(i<=9) std::cerr<<" "; break;
 	} 
 		
 	}
