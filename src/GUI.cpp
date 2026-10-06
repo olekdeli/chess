@@ -1,11 +1,20 @@
 #include "../include/GUI.hpp"
 
 void printBoard(gameState game){
-		
-for(int i=0;i!=64;i++){
-	if(i%8==0){
-		char file = 'A'+ i/8;  ;std::cerr<<"\n"<<file<<"|";
-	}
+
+
+	std::cerr<<"\n    AA--BB--CC--DD--EE--FF--GG--HH ";
+for(int rank=7;rank>=0 ;rank--){
+	
+	if(rank!=7) std::cout<<" |"<<rank+1;
+
+	std::cout<<"\n"<< rank << " |";
+	for(int file = 0; file!=8; file++){
+
+
+	int i = file + rank*8;
+	if(i<=9) std::cerr<<" ";
+
 	switch(game.mailbox[i]){
 		case 0b0001: std::cerr<< " ♟  " ;break;
 		case 0b1001: std::cerr<< " ♙  " ;break;
@@ -21,9 +30,20 @@ for(int i=0;i!=64;i++){
 		case 0b1110: std::cerr<< " ♔  " ;break;
 		case 0b0000: std::cerr<< " "<<i<<" "; break;
 	} 
-	
+		
+	}
 }
-std::cerr<<"\n";
+std::cerr<<" |0\n   -AA--BB--CC--DD--EE--FF--GG--HH \n";
+
+}
+
+void checkState(const gameState& game, const std::vector<Move>& moveList){
+	printBoard(game);
+	std::cout<<"Poss Moves:\n";
+	for(int i=0;i!=moveList.size();i++){
+		std::cout<<moveList[i].getSource()<<"->"<<moveList[i].getTarget()<<"\n";
+	}
+	std::cerr<<"\n";
 }
 
 
